@@ -2,9 +2,17 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import GeminiPrompt from './gemini';
+import TopReviews from './topReviews';
 
 export default function AmazonReviewScraper() {
     const [url, setUrl] = useState('');
+    const [reviews, setReviews] = useState<ReviewsData | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [sortBy, setSortBy] = useState('Date');
+    const [error, setError] = useState<string | null>(null);
+    const [selectedReviews, setSelectedReviews] = useState<Review[]>([]);
+
     interface Review {
         Rating: string;
         Title: string;
@@ -19,21 +27,24 @@ export default function AmazonReviewScraper() {
         Reviews: Review[];
     }
 
-    const [reviews, setReviews] = useState<ReviewsData | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [sortBy, setSortBy] = useState('Date');
+    const isValidAmazonUrl = (url: string) => {
+        const amazonUrlPattern = /^(https?:\/\/)?(www\.)?amazon\.[a-z]{2,3}\/.*$/;
+        return amazonUrlPattern.test(url);
+    };
 
     const fetchReviews = async () => {
-        if (!url.includes('amazon')) {
+        if (!isValidAmazonUrl(url)) {
             alert('Invalid Amazon URL');
             return;
         }
         setLoading(true);
+        setError(null);
         try {
-            const response = await axios.post('http://127.0.0.1:5001/api/scrape', { url });
+            const response = await axios.post('http://127.0.0.1:5001/scrape-amazon', { url });
             setReviews(response.data);
         } catch (error) {
-            alert('Error fetching reviews');
+            console.error("Error fetching reviews:", error);
+            setError('Error fetching reviews');
         }
         setLoading(false);
     };
@@ -41,9 +52,19 @@ export default function AmazonReviewScraper() {
     const sortedReviews = () => {
         if (!reviews) return [];
         return [...reviews.Reviews].sort((a, b) => {
-            if (sortBy === 'Rating') return b.Rating.localeCompare(a.Rating);
+            if (sortBy === 'Rating') return parseFloat(b.Rating) - parseFloat(a.Rating);
             if (sortBy === 'Date') return new Date(b.Date).getTime() - new Date(a.Date).getTime();
             return 0;
+        });
+    };
+
+    const handleReviewClick = (review: Review) => {
+        setSelectedReviews((prevReviews) => {
+            if (prevReviews.includes(review)) {
+                return prevReviews.filter((r) => r !== review);
+            } else {
+                return [...prevReviews, review].slice(0, 5);
+            }
         });
     };
 
@@ -65,6 +86,8 @@ export default function AmazonReviewScraper() {
                 {loading ? 'Fetching...' : 'Scrape Reviews'}
             </button>
 
+            {error && <p className="text-red-500">{error}</p>}
+
             {reviews && (
                 <div>
                     <h2 className="text-lg font-semibold">Product: {reviews.Product}</h2>
@@ -81,7 +104,11 @@ export default function AmazonReviewScraper() {
                     </select>
 
                     {sortedReviews().map((review, index) => (
-                        <div key={index} className="border p-2 my-2 rounded">
+                        <div
+                            key={index}
+                            className={`border p-2 my-2 rounded cursor-pointer ${selectedReviews.includes(review) ? 'bg-blue-100' : ''}`}
+                            onClick={() => handleReviewClick(review)}
+                        >
                             <h3 className="font-semibold">⭐ {review.Rating} - {review.Title}</h3>
                             <p className="text-sm">By {review.Author} on {review.Date}</p>
                             <p>{review.Review}</p>
@@ -89,8 +116,11 @@ export default function AmazonReviewScraper() {
                     ))}
                 </div>
             )}
+            {reviews && <TopReviews reviews={sortedReviews()} />}
+
+            <GeminiPrompt selectedReviews={selectedReviews} />
         </div>
     );
 }
 
- 
+
