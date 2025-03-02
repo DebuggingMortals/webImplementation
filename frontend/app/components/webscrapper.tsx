@@ -69,18 +69,18 @@ export default function AmazonReviewScraper() {
     };
 
     return (
-        <div className="max-w-2xl mx-auto p-4">
-            <h1 className="text-xl font-bold mb-4">Amazon Product Review Scraper</h1>
+        <div className="max-w-2xl mx-auto p-4 flex gap-4 flex-col items-center mt-10">
+            <h1 className="text-4xl font-bold mb-4">Amazon Product Review Scraper</h1>
             <input
                 type="text"
                 placeholder="Enter Amazon Product URL"
-                className="w-full p-2 border rounded mb-2"
+                className="w-full p-2 border rounded-full mb-2"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
             />
             <button
                 onClick={fetchReviews}
-                className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+                className="text-white px-4 py-2 rounded-full mb-4 bg-black/10 border border-white-100 hover:bg-white/10 hover:bg-opacity-20 transition duration-200"
                 disabled={loading}
             >
                 {loading ? 'Fetching...' : 'Scrape Reviews'}
@@ -97,7 +97,7 @@ export default function AmazonReviewScraper() {
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        className="border p-1 rounded mb-4"
+                        className="border p-1 mb-4 "
                     >
                         <option value="Date">Date</option>
                         <option value="Rating">Rating</option>
@@ -106,7 +106,7 @@ export default function AmazonReviewScraper() {
                     {sortedReviews().map((review, index) => (
                         <div
                             key={index}
-                            className={`border p-2 my-2 rounded cursor-pointer ${selectedReviews.includes(review) ? 'bg-blue-100' : ''}`}
+                            className={`border-none p-2 my-2 bg-white/10 rounded cursor-pointer ${selectedReviews.includes(review) ? 'bg-blue-100' : ''}`}
                             onClick={() => handleReviewClick(review)}
                         >
                             <h3 className="font-semibold">⭐ {review.Rating} - {review.Title}</h3>
@@ -117,8 +117,11 @@ export default function AmazonReviewScraper() {
                 </div>
             )}
             {reviews && <TopReviews reviews={sortedReviews()} />}
-
+            <div className="h-4" />
+            <div className='flex items-center'>
             <GeminiPrompt selectedReviews={selectedReviews} />
+            </div>
+            
         </div>
     );
 }

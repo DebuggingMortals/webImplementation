@@ -121,7 +121,7 @@ def get_amazon_reviews(url, max_reviews=10):
             review_title = review.select_one(".review-title")
             review_author = review.select_one(".a-profile-name")
             review_date = review.select_one(".review-date")
-            review_text = review.select_one(".review-text")
+            review_text = review.select_one(".review-text-content span")
             review_rating = review.select_one(".review-rating")
 
             review_data.append({
