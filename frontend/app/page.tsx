@@ -5,10 +5,8 @@ import GeminiPrompt from "./components/gemini";
 
 export default function Home() {
   return (
-    <div>
-      <Navbar />
+    <div className="container_middle">
       <AmazonReviewScraper/>
-      <GeminiPrompt/>
 
 
 
